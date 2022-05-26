@@ -24,16 +24,26 @@ const BlogSchema = new mongoose.Schema({
 
 const Blog = mongoose.model("Blog", BlogSchema);
 
-function validateBlog(user) {
+function validateBlog(obj) {
   const schema = Joi.object({
     text: Joi.string().min(0).max(255),
     images: Joi.array().items(Joi.string()).min(0),
     postedBy: Joi.objectId().required(),
     date: Joi.date(),
   });
-  return schema.validate(user);
+  return schema.validate(obj);
+}
+function validateEditedBlog(obj) {
+  const schema = Joi.object({
+    text: Joi.string().min(0).max(255),
+    images: Joi.string(),
+    removedImages: Joi.string(),
+    postedBy: Joi.objectId().required(),
+  });
+  return schema.validate(obj);
 }
 
 module.exports.Blog = Blog;
 module.exports.BlogSchema = BlogSchema;
 module.exports.validate = validateBlog;
+module.exports.validateEdit = validateEditedBlog;

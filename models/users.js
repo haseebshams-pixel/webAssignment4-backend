@@ -2,7 +2,6 @@ const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
-const { join } = require("lodash");
 
 const userSchema = new mongoose.Schema({
   firstname: {
@@ -33,15 +32,15 @@ const userSchema = new mongoose.Schema({
   phonenumber: {
     type: String,
     required: true,
-    minLength:11,
-    maxLength:11
+    minLength: 11,
+    maxLength: 11,
   },
-  DOB:{
-    type:String,
-    required:true,
-    minLength:10,
-    maxLength:10
-  }
+  DOB: {
+    type: String,
+    required: true,
+    minLength: 10,
+    maxLength: 10,
+  },
 });
 
 userSchema.methods.generateAuthToken = function () {
@@ -57,18 +56,17 @@ function validateUser(user) {
     email: Joi.string().email().required(),
     password: Joi.string().min(5).max(255).required(),
     phonenumber: Joi.string().min(11).max(11),
-    DOB:Joi.string().min(10).max(10)
+    DOB: Joi.string().min(10).max(10),
   });
   return schema.validate(user);
 }
 function validateUserCreds(user) {
   const schema = Joi.object({
-      email: Joi.string().email().required(),
-      password: Joi.string().min(6).max(255).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).max(255).required(),
   });
   return schema.validate(user);
 }
-
 
 module.exports.User = User;
 module.exports.userSchema = userSchema;

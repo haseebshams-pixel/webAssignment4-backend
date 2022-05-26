@@ -9,7 +9,7 @@ const path = require("path");
 const upload = require("../middleware/multer")("../public/uploads/images/");
 
 const { User } = require("../models/users");
-const { Blog, validate } = require("../models/blogs");
+const { Blog, validate, validateEdit } = require("../models/blogs");
 
 router.get("/user/:id", async (req, res) => {
   try {
@@ -70,21 +70,28 @@ router.put("/:id", [auth, upload.array("photos")], async (req, res) => {
     let user = await User.findById(req.user._id);
     if (!user) return res.status(400).send("Can't find User!");
 
-    const { error } = validate(req.body);
+    const { error } = validateEdit(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     let blog = await Blog.findById(req.params.id);
     if (!blog) return res.status(400).send("Blog not found!");
-
-    if (blog.postedBy.toString() !== user.id)
-      return res.status(400).send("You don't have permission to do that.");
-
-    if (req.files) {
-      if (blog.images) {
-        blog.images.forEach((img) =>
-          fs.unlinkSync(path.join(__dirname, `../public/uploads/images/${img}`))
-        );
+    let updatedPhotos = JSON.parse(req.body.images);
+    const removedPhotos = JSON.parse(req.body.removedImages);
+    if (removedPhotos.length > 0) {
+      for (let k = 0; k < removedPhotos.length; k++) {
+        for (let i = 0; i < blog.images.length; i++) {
+          if (blog.images[i] === removedPhotos[k]) {
+            fs.unlinkSync(
+              path.join(__dirname, `../public/uploads/images/${blog.images[i]}`)
+            );
+          }
+        }
       }
+    }
+    if (req.files) {
+      req.files.map((file) => {
+        updatedPhotos.push(file.filename);
+      });
     }
 
     blog = await Blog.findByIdAndUpdate(
@@ -92,7 +99,7 @@ router.put("/:id", [auth, upload.array("photos")], async (req, res) => {
       {
         $set: {
           text: req.body.text,
-          images: req.files.map((file) => file.filename),
+          images: updatedPhotos,
           postedBy: req.body.postedBy,
           date: new Date(),
         },
